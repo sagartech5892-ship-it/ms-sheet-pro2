@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MS SHEET PRO</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#172033;color:#fff;padding:16px;text-align:center;font-size:22px;font-weight:700}
+.container{max-width:1150px;margin:auto;padding:15px}
+.card{background:#fff;padding:18px;margin-bottom:15px;border-radius:14px;box-shadow:0 3px 12px #0002}
+.hidden{display:none!important}
+.login-box{max-width:420px;margin:55px auto}
+input,select,textarea,button{width:100%;padding:12px;margin-top:8px;border-radius:8px;border:1px solid #cbd5e1;font-size:15px}
+textarea{min-height:80px;resize:vertical}
+button{background:#2563eb;color:#fff;border:none;font-weight:700;cursor:pointer}
+button:hover{opacity:.9}
+.btn-danger{background:#dc2626}.btn-success{background:#16a34a}.btn-dark{background:#334155}.btn-warn{background:#d97706}
+.menu{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:15px}
+.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:#e0f2fe;padding:15px;border-radius:12px}
+.stat strong{display:block;font-size:25px;margin-top:5px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}
+th{background:#f8fafc}
+.search{margin-bottom:12px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.small{font-size:13px;color:#64748b}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;font-size:12px;font-weight:bold}
+.badge-ok{background:#dcfce7;color:#166534}.badge-off{background:#fee2e2;color:#991b1b}
+.notice{padding:12px;border-radius:9px;background:#fff7ed;color:#9a3412;margin-top:10px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.actions button{width:auto;margin-top:0}
+@media(max-width:700px){.menu{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.row{flex-direction:column}}
+@media(max-width:430px){.stats{grid-template-columns:1fr}.menu{grid-template-columns:1fr 1fr}header{font-size:19px}}
+@media print{.menu,.no-print,button{display:none!important}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<header>📊 MS SHEET PRO</header>
+
+<div id="loginPage" class="container">
+  <div class="card login-box">
+    <h2>🔐 Login</h2>
+    <p class="small">पहली बार लॉगिन: <b>admin</b> / <b>admin</b></p>
+    <form id="loginForm">
+      <input id="loginUser" placeholder="Username" autocomplete="username" required>
+      <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required>
+      <button type="submit">🔐 Login</button>
+    </form>
+    <div id="loginMsg" class="notice hidden"></div>
+  </div>
+</div>
+
+<div id="app" class="container hidden">
+  <div class="card">
+    <div class="row">
+      <div><b id="welcomeUser"></b><div class="small" id="roleText"></div></div>
+      <button class="btn-danger" id="logoutBtn">🔒 Logout</button>
+    </div>
+  </div>
+
+  <div class="menu">
+    <button data-page="home">🏠 Master Panel</button>
+    <button data-page="records">📋 Records</button>
+    <button data-page="jantri">📒 Jantri</button>
+    <button data-page="parties">👥 Party</button>
+    <button data-page="clients">👤 Client</button>
+    <button data-page="hisab">🧾 Hisab</button>
+    <button data-page="summary">📅 Summary</button>
+    <button data-page="reports">📊 Reports</button>
+    <button data-page="users" data-admin-only>👨‍💼 Users</button>
+  </div>
+
+  <section id="home" class="page active">
+    <div class="card">
+      <h2>🏠 Master Panel</h2>
+      <div class="stats">
+        <div class="stat">Records<strong id="totalRecords">0</strong></div>
+        <div class="stat">Jantri<strong id="totalJantri">0</strong></div>
+        <div class="stat">Parties<strong id="totalParties">0</strong></div>
+        <div class="stat">Clients<strong id="totalClients">0</strong></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🔒 Editing Control</h3>
+      <p id="lockStatus"></p>
+      <button id="lockBtn">Lock Data</button>
+    </div>
+    <div class="card">
+      <h3>💾 Backup</h3>
+      <div class="row no-print">
+        <button id="exportBtn">⬇️ Export Backup</button>
+        <button class="btn-dark" id="importBtn">⬆️ Import Backup</button>
+      </div>
+      <input id="importFile" type="file" accept=".json" class="hidden">
+      <p class="small">Backup में app का local data और users शामिल होंगे।</p>
+    </div>
+  </section>
+
+  <section id="records" class="page">
+    <div class="card">
+      <h2>📋 Records</h2>
+      <div class="grid">
+        <input id="recordDate" type="date">
+        <input id="recordTitle" placeholder="Record Title">
+        <input id="recordParty" placeholder="Party Name">
+        <input id="recordClient" placeholder="Client Name">
+        <input id="recordReference" placeholder="Reference">
+        <textarea id="recordNote" placeholder="Note"></textarea>
+      </div>
+      <button id="addRecordBtn">💾 Save Record</button>
+    </div>
+    <div class="card">
+      <input class="search" id="recordSearch" placeholder="🔎 Search" >
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Title</th><th>Party</th><th>Client</th><th>Reference</th><th>Note</th><th>Action</th></tr></thead><tbody id="recordTable"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="jantri" class="page">
+    <div class="card">
+      <h2>📒 Jantri / General Register</h2>
+      <p class="small">सामान्य business/reference entries के लिए।</p>
+      <div class="grid">
+        <input id="jantriDate" type="date">
+        <input id="jantriTitle" placeholder="Entry Title">
+        <input id="jantriValue" placeholder="Value / Reference">
+        <input id="jantriParty" placeholder="Party Name">
+        <textarea id="jantriNote" placeholder="Note"></textarea>
+      </div>
+      <button id="addJantriBtn">➕ Add Jantri Entry</button>
+    </div>
+    <div class="card">
+      <input class="search" id="jantriSearch" placeholder="🔎 Search Jantri">
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Title</th><th>Value</th><th>Party</th><th>Note</th><th>Action</th></tr></thead><tbody id="jantriTable"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="parties" class="page">
+    <div class="card">
+      <h2>👥 Party Management</h2>
+      <div class="grid">
+        <input id="partyName" placeholder="Party Name">
+        <input id="partyPhone" placeholder="Phone / Contact">
+        <input id="partyNote" placeholder="Note">
+      </div>
+      <button id="addPartyBtn">➕ Add Party</button>
+    </div>
+    <div class="card"><input class="search" id="partySearch" placeholder="🔎 Search Party">
+      <div class="table-wrap"><table><thead><tr><th>Name</th><th>Phone</th><th>Note</th><th>Action</th></tr></thead><tbody id="partyTable"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="clients" class="page">
+    <div class="card">
+      <h2>👤 Client Management</h2>
+      <div class="grid">
+        <input id="clientName" placeholder="Client Name">
+        <input id="clientPhone" placeholder="Phone / Contact">
+        <input id="clientNote" placeholder="Note">
+      </div>
+      <button id="addClientBtn">➕ Add Client</button>
+    </div>
+    <div class="card"><input class="search" id="clientSearch" placeholder="🔎 Search Client">
+      <div class="table-wrap"><table><thead><tr><th>Name</th><th>Phone</th><th>Note</th><th>Action</th></tr></thead><tbody id="clientTable"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="hisab" class="page">
+    <div class="card">
+      <h2>🧾 Hisab / Ledger</h2>
+      <div class="grid">
+        <input id="hisabDate" type="date">
+        <input id="hisabParty" placeholder="Party Name">
+        <input id="hisabDescription" placeholder="Description">
+        <input id="hisabAmount" type="number" step="0.01" placeholder="Amount">
+        <select id="hisabType"><option value="credit">Credit</option><option value="debit">Debit</option></select>
+      </div>
+      <button id="addHisabBtn">💾 Save Hisab</button>
+    </div>
+    <div class="card"><input class="search" id="hisabSearch" placeholder="🔎 Search Hisab">
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Party</th><th>Description</th><th>Type</th><th>Amount</th><th>Action</th></tr></thead><tbody id="hisabTable"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="summary" class="page">
+    <div class="card"><h2>📅 Date-wise Summary</h2><input id="summaryDate" type="date"></div>
+    <div class="card"><div class="stats">
+      <div class="stat">Records<strong id="summaryRecords">0</strong></div>
+      <div class="stat">Jantri<strong id="summaryJantri">0</strong></div>
+      <div class="stat">Credit<strong id="summaryCredit">0</strong></div>
+      <div class="stat">Debit<strong id="summaryDebit">0</strong></div>
+    </div></div>
+    <div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Party</th><th>Description</th><th>Amount</th></tr></thead><tbody id="summaryTable"></tbody></table></div></div>
+  </section>
+
+  <section id="reports" class="page">
+    <div class="card"><h2>📊 Reports</h2><button id="printBtn" class="btn-dark no-print">🖨 Print Report</button></div>
+    <div class="card" id="reportBox"></div>
+  </section>
+
+  <section id="users" class="page">
+    <div class="card">
+      <h2>👨‍💼 User Management</h2>
+      <p class="small">यह पूरा section केवल Admin को दिखता है। Worker को यह menu दिखाई नहीं देगा।</p>
+      <div class="grid">
+        <input id="newUserName" placeholder="New User ID">
+        <input id="newUserPass" type="password" placeholder="Password">
+        <select id="newUserRole"><option value="worker">Worker</option><option value="admin">Admin</option></select>
+        <select id="newUserActive"><option value="true">Active</option><option value="false">Inactive</option></select>
+      </div>
+      <button id="addUserBtn">➕ Create User</button>
+      <div class="notice">Worker को केवल काम वाले sections मिलेंगे। Admin जब चाहे worker को Active/Inactive कर सकता है और password बदल सकता है।</div>
+    </div>
+    <div class="card"><div class="table-wrap"><table><thead><tr><th>User ID</th><th>Role</th><th>Status</th><th>Change Password</th><th>Action</th></tr></thead><tbody id="userTable"></tbody></table></div></div>
+  </section>
+</div>
+
+<script>
+"use strict";
+
+const KEY="MS_SHEET_PRO_SAFE_V1";
+const LOGIN_KEY="MS_SHEET_PRO_SESSION";
+const DEFAULT={
+  users:[{id:"admin",pass:"admin",role:"admin",active:true}],
+  records:[],jantri:[],parties:[],clients:[],hisab:[],locked:false
+};
+let data=load();
+let currentUser=null;
+
+function $(id){return document.getElementById(id)}
+function today(){const d=new Date();return d.toISOString().slice(0,10)}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function uid(){return Date.now()+Math.floor(Math.random()*100000)}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));refresh()}
+function load(){
+  try{
+    const x=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(!x)return structuredClone(DEFAULT);
+    return {...structuredClone(DEFAULT),...x,
+      users:Array.isArray(x.users)?x.users:structuredClone(DEFAULT.users),
+      records:Array.isArray(x.records)?x.records:[],
+      jantri:Array.isArray(x.jantri)?x.jantri:[],
+      parties:Array.isArray(x.parties)?x.parties:[],
+      clients:Array.isArray(x.clients)?x.clients:[],
+      hisab:Array.isArray(x.hisab)?x.hisab:[]
+    };
+  }catch(e){return structuredClone(DEFAULT)}
+}
+function editable(){
+  if(data.locked && currentUser?.role!=="admin"){alert("Data locked है। Admin से unlock करवाएं।");return false}
+  if(currentUser?.role==="worker" && !currentUser.active){logout();return false}
+  return true
+}
+function login(e){
+  e.preventDefault();
+  const id=$("loginUser").value.trim();
+  const pass=$("loginPass").value;
+  const u=data.users.find(x=>x.id===id);
+  if(!u || u.pass!==pass){$("loginMsg").textContent="गलत User ID या Password";$("loginMsg").classList.remove("hidden");return false}
+  if(!u.active){$("loginMsg").textContent="यह user अभी inactive है। Admin से संपर्क करें।";$("loginMsg").classList.remove("hidden");return false}
+  currentUser={...u};
+  sessionStorage.setItem(LOGIN_KEY,id);
+  $("loginPage").classList.add("hidden");$("app").classList.remove("hidden");
+  $("welcomeUser").textContent="👋 "+u.id;
+  $("roleText").textContent=u.role==="admin"?"Administrator":"Worker";
+  document.querySelectorAll("[data-admin-only]").forEach(x=>x.classList.toggle("hidden",u.role!=="admin"));
+  $("loginForm").reset();$("loginMsg").classList.add("hidden");
+  applyWorkerMenu();showPage("home");refresh();return false;
+}
+function applyWorkerMenu(){
+  const workerAllowed=["home","records","jantri","parties","clients","hisab","summary","reports"];
+  document.querySelectorAll(".menu button[data-page]").forEach(b=>{
+    b.classList.toggle("hidden",currentUser?.role==="worker"&&!workerAllowed.includes(b.dataset.page))
+  });
+}
+function logout(){currentUser=null;sessionStorage.removeItem(LOGIN_KEY);$("app").classList.add("hidden");$("loginPage").classList.remove("hidden");$("loginUser").value="";$("loginPass").value=""}
+function showPage(id){
+  if(id==="users"&&currentUser?.role!=="admin"){alert("Admin only");return}
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  $(id)?.classList.add("active");refresh()
+}
+function renderRows(table,rows,empty,cols){table.innerHTML=rows.length?rows.join(""):`<tr><td colspan="${cols}">${empty}</td></tr>`}
+function del(collection,id){
+  if(!editable())return;
+  if(!confirm("Delete करना है?"))return;
+  data[collection]=data[collection].filter(x=>x.id!==id);save()
+}
+
+function addRecord(){
+  if(!editable())return;
+  const title=$("recordTitle").value.trim();
+  if(!title){alert("Record Title भरें");return}
+  data.records.push({id:uid(),date:$("recordDate").value||today(),title,party:$("recordParty").value.trim(),client:$("recordClient").value.trim(),reference:$("recordReference").value.trim(),note:$("recordNote").value.trim(),by:currentUser.id});
+  ["recordTitle","recordParty","recordClient","recordReference","recordNote"].forEach(id=>$(id).value="");save()
+}
+function renderRecords(){
+  const q=$("recordSearch").value.toLowerCase();
+  const rows=data.records.filter(x=>JSON.stringify(x).toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.title)}</td><td>${esc(x.party)}</td><td>${esc(x.client)}</td><td>${esc(x.reference)}</td><td>${esc(x.note)}</td><td><button class="btn-danger" onclick="del('records',${x.id})">Delete</button></td></tr>`);
+  renderRows($("recordTable"),rows,"कोई Record नहीं",7)
+}
+
+function addJantri(){
+  if(!editable())return;
+  const title=$("jantriTitle").value.trim();
+  if(!title){alert("Entry Title भरें");return}
+  data.jantri.push({id:uid(),date:$("jantriDate").value||today(),title,value:$("jantriValue").value.trim(),party:$("jantriParty").value.trim(),note:$("jantriNote").value.trim(),by:currentUser.id});
+  ["jantriTitle","jantriValue","jantriParty","jantriNote"].forEach(id=>$(id).value="");save()
+}
+function renderJantri(){
+  const q=$("jantriSearch").value.toLowerCase();
+  const rows=data.jantri.filter(x=>JSON.stringify(x).toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.title)}</td><td>${esc(x.value)}</td><td>${esc(x.party)}</td><td>${esc(x.note)}</td><td><button class="btn-danger" onclick="del('jantri',${x.id})">Delete</button></td></tr>`);
+  renderRows($("jantriTable"),rows,"कोई Jantri entry नहीं",6)
+}
+
+function addParty(){
+  if(!editable())return;
+  const name=$("partyName").value.trim();if(!name){alert("Party Name भरें");return}
+  data.parties.push({id:uid(),name,phone:$("partyPhone").value.trim(),note:$("partyNote").value.trim()});
+  ["partyName","partyPhone","partyNote"].forEach(id=>$(id).value="");save()
+}
+function renderParties(){
+  const q=$("partySearch").value.toLowerCase();
+  const rows=data.parties.filter(x=>JSON.stringify(x).toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.phone)}</td><td>${esc(x.note)}</td><td><button class="btn-danger" onclick="del('parties',${x.id})">Delete</button></td></tr>`);
+  renderRows($("partyTable"),rows,"कोई Party नहीं",4)
+}
+function addClient(){
+  if(!editable())return;
+  const name=$("clientName").value.trim();if(!name){alert("Client Name भरें");return}
+  data.clients.push({id:uid(),name,phone:$("clientPhone").value.trim(),note:$("clientNote").value.trim()});
+  ["clientName","clientPhone","clientNote"].forEach(id=>$(id).value="");save()
+}
+function renderClients(){
+  const q=$("clientSearch").value.toLowerCase();
+  const rows=data.clients.filter(x=>JSON.stringify(x).toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.phone)}</td><td>${esc(x.note)}</td><td><button class="btn-danger" onclick="del('clients',${x.id})">Delete</button></td></tr>`);
+  renderRows($("clientTable"),rows,"कोई Client नहीं",4)
+}
+function addHisab(){
+  if(!editable())return;
+  const party=$("hisabParty").value.trim(), amount=Number($("hisabAmount").value);
+  if(!party||!amount){alert("Party और valid Amount भरें");return}
+  data.hisab.push({id:uid(),date:$("hisabDate").value||today(),party,description:$("hisabDescription").value.trim(),amount,type:$("hisabType").value});
+  ["hisabParty","hisabDescription","hisabAmount"].forEach(id=>$(id).value="");save()
+}
+function renderHisab(){
+  const q=$("hisabSearch").value.toLowerCase();
+  const rows=data.hisab.filter(x=>JSON.stringify(x).toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.party)}</td><td>${esc(x.description)}</td><td>${esc(x.type)}</td><td>₹ ${x.amount.toFixed(2)}</td><td><button class="btn-danger" onclick="del('hisab',${x.id})">Delete</button></td></tr>`);
+  renderRows($("hisabTable"),rows,"कोई Hisab नहीं",6)
+}
+function renderSummary(){
+  const d=$("summaryDate").value;
+  const r=data.records.filter(x=>!d||x.date===d),j=data.jantri.filter(x=>!d||x.date===d),h=data.hisab.filter(x=>!d||x.date===d);
+  $("summaryRecords").textContent=r.length;$("summaryJantri").textContent=j.length;
+  $("summaryCredit").textContent=h.filter(x=>x.type==="credit").reduce((a,b)=>a+b.amount,0).toFixed(2);
+  $("summaryDebit").textContent=h.filter(x=>x.type==="debit").reduce((a,b)=>a+b.amount,0).toFixed(2);
+  const rows=h.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.type)}</td><td>${esc(x.party)}</td><td>${esc(x.description)}</td><td>₹ ${x.amount.toFixed(2)}</td></tr>`);
+  renderRows($("summaryTable"),rows,"कोई entry नहीं",5)
+}
+function renderReports(){
+  const credit=data.hisab.filter(x=>x.type==="credit").reduce((a,b)=>a+b.amount,0);
+  const debit=data.hisab.filter(x=>x.type==="debit").reduce((a,b)=>a+b.amount,0);
+  $("reportBox").innerHTML=`<h3>Overall Report</h3><p>Total Records: <b>${data.records.length}</b></p><p>Total Jantri: <b>${data.jantri.length}</b></p><p>Total Parties: <b>${data.parties.length}</b></p><p>Total Clients: <b>${data.clients.length}</b></p><p>Total Credit: <b>₹ ${credit.toFixed(2)}</b></p><p>Total Debit: <b>₹ ${debit.toFixed(2)}</b></p><p>Balance: <b>₹ ${(credit-debit).toFixed(2)}</b></p>`
+}
+function renderUsers(){
+  if(currentUser?.role!=="admin")return;
+  const rows=data.users.map(u=>`<tr><td>${esc(u.id)}</td><td>${esc(u.role)}</td><td>${u.active?'<span class="badge badge-ok">Active</span>':'<span class="badge badge-off">Inactive</span>'}</td><td><button class="btn-dark" onclick="changePassword('${esc(u.id)}')">Change Password</button></td><td><div class="actions">${u.id!=="admin"?`<button class="${u.active?'btn-warn':'btn-success'}" onclick="toggleUser('${esc(u.id)}')">${u.active?'Deactivate':'Activate'}</button><button class="btn-danger" onclick="deleteUser('${esc(u.id)}')">Delete</button>`:'Main Admin'}</div></td></tr>`);
+  renderRows($("userTable"),rows,"कोई user नहीं",5)
+}
+function addUser(){
+  if(currentUser?.role!=="admin")return;
+  const id=$("newUserName").value.trim(),pass=$("newUserPass").value,role=$("newUserRole").value,active=$("newUserActive").value==="true";
+  if(!/^[a-zA-Z0-9_.-]{3,30}$/.test(id)){alert("User ID 3-30 characters रखें");return}
+  if(pass.length<4){alert("Password कम से कम 4 characters का रखें");return}
+  if(data.users.some(u=>u.id.toLowerCase()===id.toLowerCase())){alert("यह User ID पहले से मौजूद है");return}
+  data.users.push({id,pass,role,active});$("newUserName").value="";$("newUserPass").value="";save();alert("User बन गया")
+}
+function toggleUser(id){if(currentUser?.role!=="admin")return;const u=data.users.find(x=>x.id===id);if(u&&u.id!=="admin"){u.active=!u.active;save()}}
+function deleteUser(id){if(currentUser?.role!=="admin")return;const u=data.users.find(x=>x.id===id);if(!u||u.id==="admin")return;if(confirm("User delete करें?")){data.users=data.users.filter(x=>x.id!==id);save()}}
+function changePassword(id){
+  if(currentUser?.role!=="admin")return;
+  const u=data.users.find(x=>x.id===id);if(!u)return;
+  const p=prompt("नया password डालें (कम से कम 4 characters):");
+  if(p===null)return;if(p.length<4){alert("Password बहुत छोटा है");return}u.pass=p;save();alert("Password बदल दिया गया")
+}
+function toggleLock(){
+  if(currentUser?.role!=="admin"){alert("Data Lock/Unlock केवल Admin कर सकता है");return}
+  data.locked=!data.locked;save()
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="MS-SHEET-PRO-backup.json";a.click();URL.revokeObjectURL(a.href)
+}
+function importData(e){
+  if(currentUser?.role!=="admin"){alert("Backup Import केवल Admin कर सकता है");return}
+  const f=e.target.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=()=>{try{const x=JSON.parse(reader.result);if(!Array.isArray(x.users)||!Array.isArray(x.records)||!Array.isArray(x.jantri))throw Error();data={...data,...x};save();alert("Backup import हो गया")}catch(err){alert("Invalid backup file")}};
+  reader.readAsText(f);e.target.value=""
+}
+function refresh(){
+  if(!currentUser)return;
+  $("totalRecords").textContent=data.records.length;$("totalJantri").textContent=data.jantri.length;$("totalParties").textContent=data.parties.length;$("totalClients").textContent=data.clients.length;
+  $("lockStatus").textContent=data.locked?"🔒 Data LOCKED है। Worker editing नहीं कर सकता।":"🟢 Data UNLOCKED है।";
+  $("lockBtn").textContent=data.locked?"🔓 Unlock Data":"🔒 Lock Data";
+  renderRecords();renderJantri();renderParties();renderClients();renderHisab();renderSummary();renderReports();renderUsers()
+}
+function setDefaults(){["recordDate","jantriDate","hisabDate"].forEach(id=>$(id).value=today())}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  setDefaults();
+  $("loginForm").addEventListener("submit",login);
+  $("logoutBtn").addEventListener("click",logout);
+  document.querySelectorAll(".menu button[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+  $("addRecordBtn").addEventListener("click",addRecord);$("addJantriBtn").addEventListener("click",addJantri);$("addPartyBtn").addEventListener("click",addParty);$("addClientBtn").addEventListener("click",addClient);$("addHisabBtn").addEventListener("click",addHisab);
+  ["recordSearch","jantriSearch","partySearch","clientSearch","hisabSearch"].forEach(id=>$(id).addEventListener("input",refresh));
+  $("summaryDate").addEventListener("change",renderSummary);$("printBtn").addEventListener("click",()=>window.print());
+  $("lockBtn").addEventListener("click",toggleLock);$("exportBtn").addEventListener("click",exportData);$("importBtn").addEventListener("click",()=>$("importFile").click());$("importFile").addEventListener("change",importData);$("addUserBtn").addEventListener("click",addUser);
+  const savedId=sessionStorage.getItem(LOGIN_KEY);if(savedId){const u=data.users.find(x=>x.id===savedId);if(u&&u.active){currentUser={...u};$("loginPage").classList.add("hidden");$("app").classList.remove("hidden");$("welcomeUser").textContent="👋 "+u.id;$("roleText").textContent=u.role==="admin"?"Administrator":"Worker";document.querySelectorAll("[data-admin-only]").forEach(x=>x.classList.toggle("hidden",u.role!=="admin"));applyWorkerMenu();refresh()}}
+});
+</script>
+</body>
+</html>
